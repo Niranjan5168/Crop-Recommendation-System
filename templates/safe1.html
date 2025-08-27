@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crop Recommendation Engine</title>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; margin: 2em 0; background-color: #f0f4f8; }
+        .main-container { max-width: 600px; width: 90%;}
+        .container { text-align: center; background: white; padding: 2em; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .lang-switch { margin-bottom: 1em; text-align: right; }
+        #langToggle { font-size: 14px; padding: 8px 12px; border-radius: 20px; border: 1px solid #007bff; background: white; color: #007bff; cursor: pointer; }
+        .input-area { margin: 1.5em 0; }
+        #manualInput { width: calc(100% - 22px); padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; }
+        .button { color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 8px; cursor: pointer; transition: background-color 0.3s; margin-top: 10px; }
+        #voiceButton { background-color: #28a745; }
+        #manualSubmit { background-color: #3498db; }
+        .button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        #status { margin-top: 1em; font-weight: bold; min-height: 22px; color: #555; }
+        #resultsContainer, #audioPlayer { margin-top: 2em; }
+        #audioPlayer.hidden, #resultsContainer.hidden { display: none; }
+        .results-grid { display: grid; grid-template-columns: 1fr; gap: 1em; margin-top: 1em;}
+        .card { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1em; }
+        .card.highlight { background-color: #d4edda; border-color: #28a745;}
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="lang-switch">
+        <button id="langToggle">ಕನ್ನಡಕ್ಕೆ ಬದಲಿಸಿ</button>
+    </div>
+
+    <div class="container">
+        <h1 id="ui-title"></h1>
+        <p id="ui-instruction"></p>
+        
+        <div class="input-area">
+            <input type="text" id="manualInput">
+            <button id="manualSubmit" class="button"></button>
+        </div>
+
+        <p id="ui-or"></p>
+
+        <button id="voiceButton" class="button"></button>
+        
+        <div id="status"></div>
+        <audio id="audioPlayer" controls class="hidden"></audio>
+    </div>
+
+    <div id="resultsContainer" class="container hidden"></div>
+</div>
+
+<script>
+    const langToggle = document.getElementById('langToggle');
+    const manualInput = document.getElementById('manualInput');
+    const manualSubmit = document.getElementById('manualSubmit');
+    const voiceButton = document.getElementById('voiceButton');
+    const statusDiv = document.getElementById('status');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const uiTitle = document.getElementById('ui-title');
+    const uiInstruction = document.getElementById('ui-instruction');
+    const uiOr = document.getElementById('ui-or');
+
+    let currentLanguage = 'en';
+    let mediaRecorder;
+    
+    const KANNADA_TRANSLATIONS = { 'rice': 'ಭತ್ತ', 'ragi': 'ರಾಗಿ', 'jowar': 'ಜೋಳ', 'maize': 'ಮೆಕ್ಕೆಜೋಳ', 'sugarcane': 'ಕಬ್ಬು', 'cotton': 'ಹತ್ತಿ', 'groundnut': 'ಕಡಲೆಕಾಯಿ', 'sunflower': 'ಸೂರ್ಯಕಾಂತಿ', 'pulses': 'ದ್ವಿದಳ ಧಾನ್ಯಗಳು', 'coffee': 'ಕಾಫಿ', 'arecanut': 'ಅಡಿಕೆ', 'tobacco': 'ತಂಬಾಕು', 'coconut': 'ತೆಂಗಿನಕಾಯಿ', 'banana': 'ಬಾಳೆಹಣ್ಣು', 'mango': 'ಮಾವಿನಹಣ್ಣು', 'cashew': 'ಗೋಡಂಬಿ', 'pepper': 'ಮೆಣಸು', 'tea': 'ಚಹಾ', 'turmeric': 'ಅರಿಶಿನ', 'sorghum': 'ಜೋಳ', 'paddy': 'ಭತ್ತ', 'grapes': 'ದ್ರಾಕ್ಷಿ', 'apple': 'ಸೇಬು', 'orange': 'ಕಿತ್ತಳೆ', 'chickpea': 'ಕಡಲೆ', 'pigeonpeas': 'ತೊಗರಿ', 'mungbean': 'ಹೆಸರು ಕಾಳು', 'blackgram': 'ಉದ್ದಿನ ಬೇಳೆ', 'kidneybeans': 'ರಾಜಮಾ', 'watermelon': 'ಕಲ್ಲಂಗಡಿ', 'muskmelon': 'ಕರಬೂಜ', 'papaya': 'ಪಪ್ಪಾಯಿ', 'pomegranate': 'ದಾಳಿಂಬೆ', 'mysuru': 'ಮೈಸೂರು', 'bengaluru urban': 'ಬೆಂಗಳೂರು ನಗರ', 'hassan': 'ಹಾಸನ', 'mandya': 'ಮಂಡ್ಯ', 'chikkamagaluru': 'ಚಿಕ್ಕಮಗಳೂರು', 'shivamogga': 'ಶಿವಮೊಗ್ಗ', 'belagavi': 'ಬೆಳಗಾವಿ', 'dharwad': 'ಧಾರವಾಡ', 'kalaburagi': 'ಕಲಬುರಗಿ', 'dakshina kannada': 'ದಕ್ಷಿಣ ಕನ್ನಡ' };
+    const uiStrings = {
+        en: { title: "Crop Recommendation Engine", instruction: "Enter your location or use the voice button.", or: "OR", manual_placeholder: "e.g., Hassan, Karnataka", manual_submit: "Get Recommendation", voice_button: "Speak Location", lang_toggle: "ಕನ್ನಡಕ್ಕೆ ಬದಲಿಸಿ" },
+        kn: { title: "ಬೆಳೆ ಶಿಫಾರಸು ವ್ಯವಸ್ಥೆ", instruction: "ನಿಮ್ಮ ಸ್ಥಳವನ್ನು ನಮೂದಿಸಿ ಅಥವಾ ಧ್ವನಿ ಬಟನ್ ಬಳಸಿ.", or: "ಅಥವಾ", manual_placeholder: "ಉದಾ, ಹಾಸನ, ಕರ್ನಾಟಕ", manual_submit: "ಶಿಫಾರಸು ಪಡೆಯಿರಿ", voice_button: "ಸ್ಥಳವನ್ನು ಮಾತನಾಡಿ", lang_toggle: "Switch to English" }
+    };
+
+    langToggle.addEventListener('click', () => {
+        currentLanguage = (currentLanguage === 'en') ? 'kn' : 'en';
+        updateUI();
+    });
+
+    manualSubmit.addEventListener('click', () => {
+        const text = manualInput.value;
+        if (!text) { alert(currentLanguage === 'en' ? "Please enter a location." : "ದಯವಿಟ್ಟು ಸ್ಥಳವನ್ನು ನಮೂದಿಸಿ."); return; }
+        getRecommendation(text);
+    });
+
+    voiceButton.addEventListener('click', () => {
+        if (!mediaRecorder || mediaRecorder.state === "inactive") startRecording();
+        else mediaRecorder.stop();
+    });
+
+    function updateUI() {
+        const strings = uiStrings[currentLanguage];
+        uiTitle.textContent = strings.title;
+        uiInstruction.textContent = strings.instruction;
+        uiOr.textContent = strings.or;
+        manualInput.placeholder = strings.manual_placeholder;
+        manualSubmit.textContent = strings.manual_submit;
+        voiceButton.textContent = strings.voice_button;
+        langToggle.textContent = strings.lang_toggle;
+    }
+
+    function startRecording() {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.start();
+            let audioChunks = [];
+            mediaRecorder.addEventListener("dataavailable", e => audioChunks.push(e.data));
+            mediaRecorder.addEventListener("stop", () => handleRecordingStop(new Blob(audioChunks, { type: 'audio/wav' })));
+            statusDiv.textContent = currentLanguage === 'en' ? "Listening..." : "ಕೇಳುತ್ತಿದೆ...";
+            voiceButton.style.backgroundColor = '#c0392b';
+            manualSubmit.disabled = true;
+        }).catch(err => alert("Could not access microphone."));
+    }
+
+    function handleRecordingStop(audioBlob) {
+        const formData = new FormData();
+        formData.append('audio_data', audioBlob);
+        formData.append('lang', currentLanguage);
+        
+        statusDiv.textContent = currentLanguage === 'en' ? "Transcribing..." : "ಪರಿವರ್ತಿಸಲಾಗುತ್ತಿದೆ...";
+
+        fetch('/transcribe', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                statusDiv.textContent = `${currentLanguage === 'en' ? 'You said' : 'ನೀವು ಹೇಳಿದ್ದು'}: "${data.transcribed_text}".`;
+                getRecommendation(data.transcribed_text);
+            })
+            .catch(err => {
+                statusDiv.textContent = `Error: ${err.message}`;
+                voiceButton.style.backgroundColor = '#28a745';
+                manualSubmit.disabled = false;
+            });
+    }
+
+    function getRecommendation(text) {
+        statusDiv.textContent = currentLanguage === 'en' ? "Getting recommendation..." : "ಶಿಫಾರಸು ಪಡೆಯಲಾಗುತ್ತಿದೆ...";
+        resultsContainer.classList.add('hidden');
+        audioPlayer.classList.add('hidden');
+        manualSubmit.disabled = true;
+        voiceButton.disabled = true;
+
+        fetch('/get_recommendation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text, lang: currentLanguage })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            displayResults(data.detailed_results);
+            playAudioFromBase64(data.audio_base64);
+            statusDiv.textContent = "";
+        })
+        .catch(err => statusDiv.textContent = `Error: ${err.message}`)
+        .finally(() => {
+            manualSubmit.disabled = false;
+            voiceButton.disabled = false;
+            voiceButton.style.backgroundColor = '#28a745';
+        });
+    }
+    
+    function playAudioFromBase64(base64String) {
+        const audioData = atob(base64String);
+        const uint8Array = new Uint8Array(audioData.length);
+        for (let i = 0; i < audioData.length; i++) {
+            uint8Array[i] = audioData.charCodeAt(i);
+        }
+        const blob = new Blob([uint8Array], { type: 'audio/wav' });
+        const url = URL.createObjectURL(blob);
+        audioPlayer.src = url;
+        audioPlayer.classList.remove('hidden');
+        audioPlayer.play();
+    }
+
+    function displayResults(results) {
+        const { district, address, top_3_crops, profit_analysis, most_profitable_crop } = results;
+        let content = '';
+
+        if (currentLanguage === 'kn') {
+            const districtKn = KANNADA_TRANSLATIONS[district.toLowerCase()] || district;
+            content += `<h2>${address} ಗಾಗಿ ವಿಶ್ಲೇಷಣೆ</h2><p><strong>ಜಿಲ್ಲೆ:</strong> ${districtKn}</p><h3>ಅತ್ಯಂತ ಸೂಕ್ತವಾದ 3 ಬೆಳೆಗಳು</h3><div class="results-grid">`;
+            top_3_crops.forEach(crop => {
+                const cropKn = KANNADA_TRANSLATIONS[crop.toLowerCase()] || crop;
+                content += `<div class="card ${crop === most_profitable_crop ? 'highlight' : ''}"><h4>${cropKn}</h4><p>ಅಂದಾಜು ಆದಾಯ: ₹${profit_analysis[crop].total_revenue}/ಎಕರೆ</p></div>`;
+            });
+            content += `</div><h3 style="margin-top: 1em;">ಅತ್ಯಂತ ಲಾಭದಾಯಕ ಬೆಳೆ: <strong>${KANNADA_TRANSLATIONS[most_profitable_crop.toLowerCase()] || most_profitable_crop}</strong></h3>`;
+        } else {
+            content += `<h2>Analysis for ${address}</h2><p><strong>District:</strong> ${district}</p><h3>Top 3 Suitable & Profitable Crops</h3><div class="results-grid">`;
+            top_3_crops.forEach(crop => {
+                content += `<div class="card ${crop === most_profitable_crop ? 'highlight' : ''}"><h4>${crop}</h4><p>Est. Revenue: ₹${profit_analysis[crop].total_revenue}/acre</p></div>`;
+            });
+            content += `</div><h3 style="margin-top: 1em;">Most Profitable Crop: <strong>${most_profitable_crop}</strong></h3>`;
+        }
+        
+        resultsContainer.innerHTML = content;
+        resultsContainer.classList.remove('hidden');
+    }
+    
+    updateUI();
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crop Recommendation Results</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 2em; background-color: #f8f9fa; color: #343a40; }
+        .container { max-width: 900px; margin: auto; }
+        .card { background-color: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5em; margin-bottom: 1.5em; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5em; }
+        .highlight { background-color: #d4edda; border: 2px solid #28a745; }
+        h1, h2, h3, h4 { color: #212529; }
+        h1 { font-size: 2.5em; text-align: center; color: #28a745; }
+        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .final-rec h1 { font-size: 3em; margin: 0; }
+        .formula { font-style: italic; color: #6c757d; font-size: 0.9em; }
+        .price { font-size: 1.2em; font-weight: bold; color: #007bff; }
+        .revenue { font-size: 1.4em; font-weight: bold; color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Smart Crop Analysis</h1>
+
+        {% if error %}
+            <div class="card" style="background-color: #f8d7da; border-color: #f5c6cb;">
+                <h3>Error</h3>
+                <p>{{ error }}</p>
+            </div>
+        {% else %}
+            <div class="card">
+                <h3>Location Details</h3>
+                <p><strong>Address:</strong> {{ address }} | <strong>District:</strong> {{ district }}</p>
+                <p><strong>Conditions:</strong> Nitrogen: {{ nitrogen }}, P: {{ phosphorus }}, K: {{ potassium }}, pH: {{ ph }}, Rainfall: {{ rainfall }}mm, Temp: {{ temperature }}°C, Humidity: {{ humidity }}%</p>
+            </div>
+
+            <div class="card">
+                <h2>Step 1: Top 3 Suitable Crops</h2>
+                <p>Based on your local soil and weather, these crops are the most suitable to grow:</p>
+                <ul>
+                    {% for crop in top_3_crops %}
+                        <li><strong>{{ crop }}</strong></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>Step 2: Profitability Analysis (per Acre)</h2>
+                <p>We've predicted the market price for each crop at harvest time and calculated the potential revenue per acre.</p>
+                <div class="results-grid">
+                    {% for crop, result in profit_results.items() %}
+                        <div class="card">
+                            <h4>{{ crop }}</h4>
+                            {% if result.status == 'success' %}
+                                <p>Predicted Price: <span class="price">₹{{ result.predicted_price }}/kg</span></p>
+                                <p>Est. Yield: {{ result.yield_per_acre }} kg/acre</p>
+                                <hr>
+                                <p class="formula">₹{{ result.predicted_price }} × {{ result.yield_per_acre }}kg</p>
+                                <p>Est. Revenue: <span class="revenue">₹{{ result.total_revenue }}</span></p>
+                                <p><small>Expected Harvest: {{ result.harvest_month }}</small></p>
+                            {% else %}
+                                <p style="color: red;">Could not analyze.</p>
+                                <p><small>Reason: {{ result.message }}</small></p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card highlight final-rec">
+                <h2 style="border: none;">Final Recommendation: Most Profitable Crop</h2>
+                {% if most_profitable_crop %}
+                    <h1><strong>{{ most_profitable_crop }}</strong></h1>
+                {% else %}
+                    <p>Could not determine the most profitable crop from the suitable options.</p>
+                {% endif %}
+            </div>
+
+        {% endif %}
+        <div style="text-align: center; margin-top: 2em;">
+             <a href="/" style="text-decoration: none; background-color: #007bff; color: white; padding: 10px 20px; border-radius: 5px;">Run New Analysis</a>
+        </div>
+    </div>
+</body>
+</html>

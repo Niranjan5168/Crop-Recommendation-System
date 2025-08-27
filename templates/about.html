@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}About Agri-AI Karnataka{% endblock %}
+
+{% block content %}
+<div class="card-dark p-8 md:p-10 rounded-2xl shadow-2xl space-y-8 text-slate-100 leading-relaxed max-w-4xl mx-auto animate-fade-in">
+    <div class="flex items-center mb-4">
+        <a href="/" class="inline-flex items-center text-green-300 hover:text-green-200 transition-all group">
+            <i class="fas fa-arrow-left mr-3 transition-transform group-hover:-translate-x-1"></i>
+            <span id="ui-back-about">Back to Home</span>
+        </a>
+    </div>
+
+    <h1 id="ui-about-title" class="text-4xl font-bold text-white border-b-2 border-green-500/50 pb-2 mb-6">About Agri-AI Karnataka</h1>
+
+    <div class="bg-slate-800/70 p-6 rounded-lg">
+        <h2 id="ui-how-it-works-title" class="text-2xl font-semibold text-white mb-4">How It Works</h2>
+        <div id="ui-how-it-works-list" class="space-y-4">
+            </div>
+    </div>
+    
+    <div>
+        <h2 id="ui-tech-stack-title" class="text-2xl font-semibold text-white mb-4">Technology Stack</h2>
+        <p id="ui-tech-stack-text" class="text-slate-200">
+            This application is built with a modern, robust technology stack:
+        </p>
+        <div id="ui-tech-stack-list" class="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center mt-6">
+            </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let currentLanguage = localStorage.getItem('agriLang') || 'en';
+
+    const uiStrings = {
+        en: {
+            back: "Back to Home",
+            about_title: "About Agri-AI Karnataka",
+            how_it_works_title: "How It Works",
+            tech_stack_title: "Technology Stack",
+            tech_stack_text: "This application is built with a modern, robust technology stack:",
+            how_it_works_items: [
+                { icon: 'fa-map-location-dot', color: 'text-blue-400', title: 'Geocoding & Data', text: "We pinpoint your location, fetch real-time weather, and access a comprehensive database of local soil conditions for your district." },
+                { icon: 'fa-tree', color: 'text-green-400', title: 'Crop Suitability (AI)', text: "A Random Forest model analyzes this data to determine the top 3 most suitable crops for your specific environmental factors." },
+                { icon: 'fa-chart-line', color: 'text-purple-400', title: 'Profitability Forecast (AI)', text: "For those top crops, a TensorFlow (LSTM) model predicts future market prices based on historical data to identify the most profitable option." },
+                { icon: 'fa-volume-high', color: 'text-teal-400', title: 'Voice Technology', text: "Hugging Face models allow for easy interaction via voice in both English and Kannada." }
+            ],
+            tech_stack_items: [
+                { icon: 'fa-brands fa-python', name: 'Python' },
+                { icon: 'fa-solid fa-flask', name: 'Flask' },
+                { icon: 'fa-solid fa-robot', name: 'Hugging Face' },
+                { icon: 'fa-solid fa-brain', name: 'TensorFlow' },
+                { icon: 'fa-solid fa-leaf', name: 'Scikit-learn' },
+                { icon: 'fa-solid fa-cloud-sun', name: 'OpenWeather' },
+                { icon: 'fa-brands fa-html5', name: 'HTML5' },
+                { icon: 'fa-brands fa-js', name: 'JavaScript' },
+            ]
+        },
+        kn: {
+            back: "ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ",
+            about_title: "ಕೃಷಿ-ಎಐ ಕರ್ನಾಟಕ ಬಗ್ಗೆ",
+            how_it_works_title: "ಇದು ಹೇಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ",
+            tech_stack_title: "ತಂತ್ರಜ್ಞಾನದ ಹಿನ್ನೆಲೆ",
+            tech_stack_text: "ಈ ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ಆಧುನಿಕ, ದೃಢವಾದ ತಂತ್ರಜ್ಞಾನದೊಂದಿಗೆ ನಿರ್ಮಿಸಲಾಗಿದೆ:",
+            how_it_works_items: [
+                { icon: 'fa-map-location-dot', color: 'text-blue-400', title: 'ಜಿಯೋಕೋಡಿಂಗ್ ಮತ್ತು ಡೇಟಾ', text: "ನಾವು ನಿಮ್ಮ ಸ್ಥಳವನ್ನು ಗುರುತಿಸುತ್ತೇವೆ, ನೈಜ-ಸಮಯದ ಹವಾಮಾನವನ್ನು ಪಡೆಯುತ್ತೇವೆ ಮತ್ತು ನಿಮ್ಮ ಜಿಲ್ಲೆಯ ಸ್ಥಳೀಯ ಮಣ್ಣಿನ ಪರಿಸ್ಥಿತಿಗಳ ಸಮಗ್ರ ಡೇಟಾಬೇಸ್ ಅನ್ನು ಪ್ರವೇಶಿಸುತ್ತೇವೆ." },
+                { icon: 'fa-tree', color: 'text-green-400', title: 'ಬೆಳೆ ಸೂಕ್ತತೆ (AI)', text: "ಒಂದು ರಾಂಡಮ್ ಫಾರೆಸ್ಟ್ ಮಾದರಿಯು ಈ ಡೇಟಾವನ್ನು ವಿಶ್ಲೇಷಿಸಿ ನಿಮ್ಮ ನಿರ್ದಿಷ್ಟ ಪರಿಸರ ಅಂಶಗಳಿಗೆ ಸೂಕ್ತವಾದ ಅಗ್ರ 3 ಬೆಳೆಗಳನ್ನು ನಿರ್ಧರಿಸುತ್ತದೆ." },
+                { icon: 'fa-chart-line', color: 'text-purple-400', title: 'ಲಾಭದಾಯಕತೆಯ ಮುನ್ಸೂಚನೆ (AI)', text: "ಆ ಪ್ರಮುಖ ಬೆಳೆಗಳಿಗಾಗಿ, ಟೆನ್ಸರ್‌ಫ್ಲೋ (LSTM) ಮಾದರಿಯು ಐತಿಹಾಸಿಕ ಡೇಟಾವನ್ನು ಆಧರಿಸಿ ಭವಿಷ್ಯದ ಮಾರುಕಟ್ಟೆ ಬೆಲೆಗಳನ್ನು ಊಹಿಸಿ ಅತ್ಯಂತ ಲಾಭದಾಯಕ ಆಯ್ಕೆಯನ್ನು ಗುರುತಿಸುತ್ತದೆ." },
+                { icon: 'fa-volume-high', color: 'text-teal-400', title: 'ಧ್ವನಿ ತಂತ್ರಜ್ಞಾನ', text: "ಹಗ್ಗಿಂಗ್ ಫೇಸ್ ಮಾದರಿಗಳು ಇಂಗ್ಲಿಷ್ ಮತ್ತು ಕನ್ನಡ ಎರಡರಲ್ಲೂ ಧ್ವನಿಯ ಮೂಲಕ ಸುಲಭ ಸಂವಹನಕ್ಕೆ ಅವಕಾಶ ನೀಡುತ್ತವೆ." }
+            ],
+            tech_stack_items: [
+                { icon: 'fa-brands fa-python', name: 'ಪೈಥಾನ್' },
+                { icon: 'fa-solid fa-flask', name: 'ಫ್ಲಾಸ್ಕ್' },
+                { icon: 'fa-solid fa-robot', name: 'ಹಗ್ಗಿಂಗ್ ಫೇಸ್' },
+                { icon: 'fa-solid fa-brain', name: 'ಟೆನ್ಸರ್‌ಫ್ಲೋ' },
+                { icon: 'fa-solid fa-leaf', name: 'Scikit-learn' },
+                { icon: 'fa-solid fa-cloud-sun', name: 'OpenWeather' },
+                { icon: 'fa-brands fa-html5', name: 'HTML5' },
+                { icon: 'fa-brands fa-js', name: 'JavaScript' },
+            ]
+        }
+    };
+
+    function updateUI() {
+        const strings = uiStrings[currentLanguage];
+        document.title = strings.about_title;
+        
+        document.getElementById('ui-back-about').textContent = strings.back;
+        document.getElementById('ui-about-title').textContent = strings.about_title;
+        document.getElementById('ui-how-it-works-title').textContent = strings.how_it_works_title;
+        document.getElementById('ui-tech-stack-title').textContent = strings.tech_stack_title;
+        document.getElementById('ui-tech-stack-text').textContent = strings.tech_stack_text;
+
+        const howItWorksList = document.getElementById('ui-how-it-works-list');
+        howItWorksList.innerHTML = ''; 
+        strings.how_it_works_items.forEach(item => {
+            howItWorksList.innerHTML += `
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center shadow-lg">
+                        <i class="fas ${item.icon} ${item.color} text-2xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg text-white">${item.title}</h4>
+                        <p class="text-slate-200">${item.text}</p>
+                    </div>
+                </div>
+            `;
+        });
+        
+        const techStackList = document.getElementById('ui-tech-stack-list');
+        techStackList.innerHTML = '';
+        strings.tech_stack_items.forEach(item => {
+            techStackList.innerHTML += `
+                <div class="flex flex-col items-center justify-center p-4 bg-slate-900/60 rounded-lg shadow-md hover:shadow-green-500/20 transition-all duration-300 transform hover:-translate-y-1">
+                    <i class="${item.icon} text-4xl text-emerald-200 mb-2"></i>
+                    <span class="font-semibold text-emerald-100">${item.name}</span>
+                </div>
+            `;
+        });
+    }
+
+    window.addEventListener('languageChange', () => {
+        currentLanguage = localStorage.getItem('agriLang') || 'en';
+        updateUI();
+    });
+
+    updateUI();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>An Integrated Agro-Advisory System for Sustainable Farming in Karnataka</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .brand-blue-deep { color: #003f5c; }
+        .brand-blue-mid { color: #2f4b7c; }
+        .brand-purple-deep { color: #665191; }
+        .brand-purple-mid { color: #a05195; }
+        .brand-magenta { color: #d45087; }
+        .brand-pink { color: #f95d6a; }
+        .brand-orange { color: #ff7c43; }
+        .brand-yellow { color: #ffa600; }
+        .bg-brand-blue-deep { background-color: #003f5c; }
+        .bg-brand-blue-mid { background-color: #2f4b7c; }
+        .bg-brand-purple-deep { background-color: #665191; }
+        .bg-brand-purple-mid { background-color: #a05195; }
+        .bg-brand-magenta { background-color: #d45087; }
+        .bg-brand-pink { background-color: #f95d6a; }
+        .bg-brand-orange { background-color: #ff7c43; }
+        .bg-brand-yellow { background-color: #ffa600; }
+        .text-shadow {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 384px;
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-12 md:mb-16">
+            <h1 class="text-4xl md:text-6xl font-black brand-blue-deep mb-4 text-shadow">Farming Futures in Karnataka</h1>
+            <p class="text-lg md:text-xl max-w-4xl mx-auto text-gray-600">A visual summary of an integrated agro-advisory system designed to empower smallholder farmers against a convergence of modern crises.</p>
+        </header>
+
+        <section class="mb-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 text-center">
+                    <p class="text-8xl md:text-9xl font-black brand-yellow text-shadow">56%</p>
+                    <h2 class="text-2xl font-bold brand-blue-deep mt-2">of the Workforce</h2>
+                    <p class="text-gray-600 mt-2">Agriculture remains the primary occupation for the majority of Karnataka's population, forming the backbone of the rural economy.</p>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 text-center">
+                    <p class="text-8xl md:text-9xl font-black brand-orange text-shadow">15%</p>
+                    <h2 class="text-2xl font-bold brand-blue-deep mt-2">of State GSDP</h2>
+                    <p class="text-gray-600 mt-2">The agriculture sector and its allied activities are a cornerstone of the state's economic output, underscoring its strategic importance.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-16 bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h2 class="text-3xl font-bold brand-blue-deep text-center mb-2">The Paradox of a Divided Land</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-8">Despite Karnataka's rich crop diversity, its agricultural potential is constrained by the highly fragmented nature of its farm holdings. The vast majority of farmers operate on small, economically vulnerable plots.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h3 class="text-xl font-bold brand-blue-mid mb-2">Distribution of Farm Holdings</h3>
+                    <p class="text-gray-600 mb-4">Over two-thirds of Karnataka's farms are classified as small or marginal, covering less than two hectares. This structure limits the adoption of modern technology and makes individual farmers highly susceptible to economic and environmental shocks.</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="landHoldingsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold brand-blue-deep text-center mb-8">A Convergence of Crises</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-2xl font-bold brand-purple-deep mb-4 flex items-center"><span class="text-3xl mr-3">📉</span>Climatic Instability</h3>
+                    <p class="text-gray-600 mb-6">Increasingly erratic monsoons, characterized by declining overall rainfall and delayed sowing seasons, directly threaten crop cycles and yields across the state.</p>
+                    <div class="chart-container h-64 md:h-80">
+                        <canvas id="rainfallChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-2xl font-bold brand-magenta mb-4 flex items-center"><span class="text-3xl mr-3">🌱</span>Soil Health Deficit</h3>
+                    <p class="text-gray-600 mb-6">Intensive farming and imbalanced fertilizer use have led to widespread soil degradation, with over half of farmlands suffering from critical micronutrient deficiencies.</p>
+                     <div class="chart-container h-64 md:h-80">
+                        <canvas id="soilDeficiencyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-2xl font-bold brand-pink mb-4 flex items-center"><span class="text-3xl mr-3">💸</span>Market Volatility</h3>
+                    <p class="text-gray-600 mb-6">Farmers face extreme price fluctuations. The 2025 Kolar mango crisis, where prices crashed by over 75%, highlights the economic precarity caused by a lack of processing infrastructure.</p>
+                     <div class="chart-container h-64 md:h-80">
+                        <canvas id="mangoPriceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-2xl font-bold brand-orange mb-4 flex items-center"><span class="text-3xl mr-3">💻</span>The Digital Divide</h3>
+                    <p class="text-gray-600 mb-6">A significant gap in internet access and digital literacy prevents most farmers from accessing crucial real-time information, widening the inequality gap.</p>
+                    <div class="chart-container h-64 md:h-80">
+                         <canvas id="digitalDivideChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-16 bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h2 class="text-3xl font-bold brand-blue-deep text-center mb-2">A Data-Driven Solution</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-8">To combat these interconnected challenges, an integrated agro-advisory system is proposed. It leverages AI and a multilingual voice interface to deliver holistic, accessible, and actionable advice to farmers.</p>
+            
+            <div class="w-full overflow-x-auto p-4">
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="text-center p-4 rounded-lg bg-blue-50 border border-blue-200 w-full md:w-auto">
+                        <div class="text-4xl">📥</div>
+                        <h4 class="font-bold text-lg brand-blue-mid mt-2">Data Fusion</h4>
+                        <p class="text-sm text-gray-600">Integrates soil, weather, geospatial, and market data.</p>
+                    </div>
+
+                    <div class="text-4xl brand-purple-deep font-bold transform -rotate-90 md:rotate-0">→</div>
+
+                    <div class="text-center p-4 rounded-lg bg-purple-50 border border-purple-200 w-full md:w-auto">
+                         <div class="text-4xl">🧠</div>
+                        <h4 class="font-bold text-lg brand-purple-deep mt-2">ML Recommendation</h4>
+                        <p class="text-sm text-gray-600">Random Forest model predicts optimal crops.</p>
+                    </div>
+
+                     <div class="text-4xl brand-magenta font-bold transform -rotate-90 md:rotate-0">→</div>
+
+                    <div class="text-center p-4 rounded-lg bg-pink-50 border border-pink-200 w-full md:w-auto">
+                         <div class="text-4xl">🗣️</div>
+                        <h4 class="font-bold text-lg brand-magenta mt-2">Voice Interface</h4>
+                        <p class="text-sm text-gray-600">Kannada ASR/TTS bridges the literacy and digital divide.</p>
+                    </div>
+                    
+                    <div class="text-4xl brand-orange font-bold transform -rotate-90 md:rotate-0">→</div>
+                    
+                    <div class="text-center p-4 rounded-lg bg-yellow-50 border border-yellow-200 w-full md:w-auto">
+                         <div class="text-4xl">👨‍🌾</div>
+                        <h4 class="font-bold text-lg brand-orange mt-2">Empowered Farmer</h4>
+                        <p class="text-sm text-gray-600">Receives timely, data-driven, and explained advice.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold brand-blue-deep text-center mb-8">Proven Performance</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-2xl font-bold brand-purple-deep mb-4">Recommendation Engine Accuracy</h3>
+                    <p class="text-gray-600 mb-6">The Random Forest model significantly outperforms the baseline KNN model, demonstrating superior accuracy in suggesting the most suitable crops based on fused data.</p>
+                    <div class="chart-container">
+                        <canvas id="modelAccuracyChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-col justify-center">
+                    <h3 class="text-2xl font-bold brand-magenta mb-4">Voice Interface Quality</h3>
+                    <p class="text-gray-600 mb-6">The system's Kannada voice interface is evaluated using industry-standard metrics, proving its high accuracy for transcription and naturalness for synthesized speech.</p>
+                    <div class="flex flex-col space-y-6">
+                        <div class="text-center">
+                            <p class="text-6xl font-black brand-pink">10.1%</p>
+                            <h4 class="text-xl font-bold brand-blue-deep mt-1">Word Error Rate (ASR)</h4>
+                            <p class="text-sm text-gray-500">(Lower is better)</p>
+                        </div>
+                         <div class="text-center">
+                            <p class="text-6xl font-black brand-orange">4.51 / 5.0</p>
+                            <h4 class="text-xl font-bold brand-blue-deep mt-1">Mean Opinion Score (TTS)</h4>
+                            <p class="text-sm text-gray-500">(Higher is better)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h2 class="text-3xl font-bold brand-blue-deep text-center mb-2">Pathways to Responsible Deployment</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-8">Technical success is not enough. A sustainable and equitable system must be built on a strong ethical foundation that protects and empowers farmers.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="border-t-4 border-brand-blue-mid bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-lg brand-blue-mid mb-2">Algorithmic Fairness</h4>
+                    <p class="text-sm text-gray-600">Mitigate bias by training on diverse datasets from all farm sizes and regions, ensuring recommendations are equitable.</p>
+                </div>
+                <div class="border-t-4 border-brand-purple-deep bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-lg brand-purple-deep mb-2">Data Sovereignty</h4>
+                    <p class="text-sm text-gray-600">Empower farmers with ownership and control over their data through transparent policies and robust consent mechanisms.</p>
+                </div>
+                <div class="border-t-4 border-brand-magenta bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-lg brand-magenta mb-2">Farmer Autonomy</h4>
+                    <p class="text-sm text-gray-600">Design the system as an explainable decision-support tool, not a command-and-control system, to augment—not replace—farmer expertise.</p>
+                </div>
+                <div class="border-t-4 border-brand-orange bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-lg brand-orange mb-2">Accountability & Trust</h4>
+                    <p class="text-sm text-gray-600">Build trust by being transparent about model confidence levels and establishing clear liability frameworks for advice.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <footer class="text-center p-8 text-gray-500">
+        <p>This infographic synthesizes findings from "An Integrated Agro-Advisory System for Sustainable Farming in Karnataka".</p>
+        <p>By leveraging technology responsibly, we can cultivate a more resilient, equitable, and sustainable agricultural future.</p>
+    </footer>
+
+    <script>
+        const tooltipTitleCallback = (tooltipItems) => {
+            const item = tooltipItems[0];
+            let label = item.chart.data.labels[item.dataIndex];
+            if (Array.isArray(label)) {
+                return label.join(' ');
+            }
+            return label;
+        };
+
+        const wrapLabel = (label, maxLength = 16) => {
+            if (label.length <= maxLength) {
+                return label;
+            }
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = '';
+            for (const word of words) {
+                if ((currentLine + ' ' + word).trim().length > maxLength) {
+                    lines.push(currentLine.trim());
+                    currentLine = word;
+                } else {
+                    currentLine = (currentLine + ' ' + word).trim();
+                }
+            }
+            if (currentLine) {
+                lines.push(currentLine.trim());
+            }
+            return lines;
+        };
+        
+        const brilliantBlues = {
+            deepBlue: '#003f5c',
+            midBlue: '#2f4b7c',
+            deepPurple: '#665191',
+            midPurple: '#a05195',
+            magenta: '#d45087',
+            pink: '#f95d6a',
+            orange: '#ff7c43',
+            yellow: '#ffa600'
+        };
+
+        new Chart(document.getElementById('landHoldingsChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Marginal (<1 ha)', 'Small (1-2 ha)', 'Other (>2 ha)'],
+                datasets: [{
+                    label: 'Farm Holdings',
+                    data: [49.1, 19.0, 31.9],
+                    backgroundColor: [brilliantBlues.pink, brilliantBlues.orange, brilliantBlues.yellow],
+                    borderColor: '#ffffff',
+                    borderWidth: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { callbacks: { title: tooltipTitleCallback } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('rainfallChart'), {
+            type: 'line',
+            data: {
+                labels: ['1901-1950', '1951-2000', wrapLabel('Projected 2035 Trend')],
+                datasets: [{
+                    label: 'Mean Annual Rainfall (mm)',
+                    data: [1204, 1140, 1090],
+                    fill: false,
+                    borderColor: brilliantBlues.deepPurple,
+                    tension: 0.1,
+                    pointBackgroundColor: brilliantBlues.deepPurple,
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: false }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { title: tooltipTitleCallback } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('soilDeficiencyChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Boron', 'Zinc', 'Sulfur'],
+                datasets: [{
+                    label: 'Deficiency in Fields (%)',
+                    data: [62, 55, 52],
+                    backgroundColor: [brilliantBlues.magenta, brilliantBlues.pink, brilliantBlues.orange],
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { title: tooltipTitleCallback } }
+                },
+                scales: {
+                    x: { max: 100 }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('mangoPriceChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Viable Price', 'Crash Price (2025)'],
+                datasets: [{
+                    label: 'Price per Quintal (₹)',
+                    data: [12000, 2500],
+                    backgroundColor: [brilliantBlues.yellow, brilliantBlues.pink],
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { title: tooltipTitleCallback } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('digitalDivideChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Rural Internet Access', 'No Access'],
+                datasets: [{
+                    label: 'Digital Access',
+                    data: [29, 71],
+                    backgroundColor: [brilliantBlues.deepBlue, '#e0e0e0'],
+                    borderColor: '#ffffff',
+                    borderWidth: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: { callbacks: { title: tooltipTitleCallback } }
+                }
+            }
+        });
+        
+        new Chart(document.getElementById('modelAccuracyChart'), {
+            type: 'bar',
+            data: {
+                labels: [wrapLabel('Random Forest (Proposed)'), wrapLabel('K-Nearest Neighbors (Baseline)')],
+                datasets: [{
+                    label: 'Model Accuracy (%)',
+                    data: [99.22, 97.95],
+                    backgroundColor: [brilliantBlues.deepPurple, brilliantBlues.midPurple],
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.7,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { title: tooltipTitleCallback } }
+                },
+                scales: {
+                    y: { beginAtZero: false, min: 95, max: 100 }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

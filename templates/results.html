@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Your Crop Recommendation{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+    <div class="mb-8">
+        <a href="/" class="inline-flex items-center text-emerald-200 hover:text-white transition-all group">
+            <i class="fas fa-arrow-left mr-3 transition-transform group-hover:-translate-x-1"></i>
+            <span id="ui-back" class="text-lg">Back to Home</span>
+        </a>
+    </div>
+
+    <div id="results-content" class="opacity-0 transition-opacity duration-1000">
+        <div id="loading-results" class="text-center text-emerald-100 py-20">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-400 mx-auto"></div>
+            <p class="mt-4 text-2xl" id="ui-loading-text">Harvesting your results...</p>
+        </div>
+
+        <div id="error-display" class="hidden card-dark p-6 rounded-lg text-center">
+            <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+            <h2 id="error-title" class="text-2xl font-bold text-red-400 mb-2">Analysis Failed</h2>
+            <p id="error-message-results" class="text-slate-300"></p>
+        </div>
+
+        <div id="dynamic-content-area" class="space-y-6"></div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const resultsContent = document.getElementById('results-content');
+        const loadingDiv = document.getElementById('loading-results');
+        const errorDiv = document.getElementById('error-display');
+        const errorMessageP = document.getElementById('error-message-results');
+        const dynamicContentArea = document.getElementById('dynamic-content-area');
+         
+        const uiElements = {
+            back: document.getElementById('ui-back'),
+            loading_text: document.getElementById('ui-loading-text'),
+            error_title: document.getElementById('error-title')
+        };
+         
+        const KANNADA_TRANSLATIONS = { 'rice': 'ಭತ್ತ', 'ragi': 'ರಾಗಿ', 'jowar': 'ಜೋಳ', 'maize': 'ಮೆಕ್ಕೆಜೋಳ', 'sugarcane': 'ಕಬ್ಬು', 'cotton': 'ಹತ್ತಿ', 'groundnut': 'ಕಡಲೆಕಾಯಿ', 'sunflower': 'ಸೂರ್ಯಕಾಂತಿ', 'pulses': 'ದ್ವಿದಳ ಧಾನ್ಯಗಳು', 'coffee': 'ಕಾಫಿ', 'arecanut': 'ಅಡಿಕೆ', 'tobacco': 'ತಂಬಾಕು', 'coconut': 'ತೆಂಗಿನಕಾಯಿ', 'banana': 'ಬಾಳೆಹಣ್ಣು', 'mango': 'ಮಾವಿನಹಣ್ಣು', 'cashew': 'ಗೋಡಂಬಿ', 'pepper': 'ಮೆಣಸು', 'tea': 'ಚಹಾ', 'turmeric': 'ಅರಿಶಿನ', 'sorghum': 'ಜೋಳ', 'paddy': 'ಭತ್ತ', 'grapes': 'ದ್ರಾಕ್ಷಿ', 'apple': 'ಸೇಬು', 'orange': 'ಕಿತ್ತಳೆ', 'chickpea': 'ಕಡಲೆ', 'pigeonpeas': 'ತೊಗರಿ', 'mungbean': 'ಹೆಸರು ಕಾಳು', 'blackgram': 'ಉದ್ದಿನ ಬೇಳೆ', 'kidneybeans': 'ರಾಜಮಾ', 'watermelon': 'ಕಲ್ಲಂಗಡಿ', 'muskmelon': 'ಕರಬೂಜ', 'papaya': 'ಪಪ್ಪಾಯಿ', 'pomegranate': 'ದಾಳಿಂಬೆ', 'mysuru': 'ಮೈಸೂರು', 'bengaluru urban': 'ಬೆಂಗಳೂರು ನಗರ', 'hassan': 'ಹಾಸನ', 'mandya': 'ಮಂಡ್ಯ', 'chikkamagaluru': 'ಚಿಕ್ಕಮಗಳೂರು', 'shivamogga': 'ಶಿವಮೊಗ್ಗ', 'belagavi': 'ಬೆಳಗಾವಿ', 'dharwad': 'ಧಾರವಾಡ', 'kalaburagi': 'ಕಲಬುರಗಿ', 'dakshina kannada': 'ದಕ್ಷಿಣ ಕನ್ನಡ', 'udupi': 'ಉಡುಪಿ' };
+        const uiStrings = {
+            en: {
+                back: "Back to Home", loading: "Harvesting your results...",
+                no_results: "No results to display. Please go back and enter a location.",
+                error_title: "Analysis Failed",
+                render_error: "Could not display results. The analysis data may be invalid. Please try again.",
+                analysis_for: "Analysis For", district: "District",
+                conditions: "Your Local Conditions", nitrogen: "Nitrogen (N)",
+                phosphorus: "Phosphorus (P)", potassium: "Potassium (K)", ph: "Soil pH",
+                rainfall: "Rainfall", temp: "Temperature", humidity: "Humidity",
+                top_crops: "Top 3 Suitable & Profitable Crops", 
+                predicted_price: "Predicted Price",
+                per_kg: "/kg", most_profitable: "Most Profitable",
+                audio_rec: "Spoken Recommendation"
+            },
+            kn: {
+                back: "ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ", loading: "ಫಲಿತಾಂಶಗಳನ್ನು ಸಂಗ್ರಹಿಸಲಾಗುತ್ತಿದೆ...",
+                no_results: "ಫಲಿತಾಂಶಗಳು ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಹಿಂತಿರುಗಿ ಮತ್ತು ಸ್ಥಳವನ್ನು ನಮೂದಿಸಿ.",
+                error_title: "ವಿಶ್ಲೇಷಣೆ ವಿಫಲವಾಗಿದೆ",
+                render_error: "ಫಲಿತಾಂಶಗಳನ್ನು ಪ್ರದರ್ಶಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ವಿಶ್ಲೇಷಣೆಯ ಡೇಟಾ ಅಮಾನ್ಯವಾಗಿರಬಹುದು. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+                analysis_for: "ವಿಶ್ಲೇಷಣೆ", district: "ಜಿಲ್ಲೆ",
+                conditions: "ನಿಮ್ಮ ಸ್ಥಳೀಯ ಪರಿಸ್ಥಿತಿಗಳು", nitrogen: "ಸಾರಜನಕ (N)",
+                phosphorus: "ರಂಜಕ (P)", potassium: "ಪೊಟ್ಯಾಸಿಯಮ್ (K)", ph: "ಮಣ್ಣಿನ pH",
+                rainfall: "ಮಳೆ", temp: "ತಾಪಮಾನ", humidity: "ತೇವಾಂಶ",
+                top_crops: "ಅತ್ಯಂತ ಸೂಕ್ತ ಮತ್ತು ಲಾಭದಾಯಕ 3 ಬೆಳೆಗಳು", 
+                predicted_price: "ಅಂದಾಜು ಬೆಲೆ",
+                per_kg: "/ಕೆಜಿ", most_profitable: "ಅತ್ಯಂತ ಲಾಭದಾಯಕ",
+                audio_rec: "ಧ್ವನಿ ಶಿಫಾರಸು"
+            }
+        };
+
+        let currentLanguage = localStorage.getItem('agriLang') || 'en';
+         
+        function updateUIText() {
+            const strings = uiStrings[currentLanguage];
+            document.title = currentLanguage === 'en' ? 'Your Crop Recommendation' : 'ನಿಮ್ಮ ಬೆಳೆ ಶಿಫಾರಸು';
+            uiElements.back.textContent = strings.back;
+            uiElements.loading_text.textContent = strings.loading;
+            uiElements.error_title.textContent = strings.error_title;
+        }
+
+        window.addEventListener('languageChange', () => {
+            currentLanguage = localStorage.getItem('agriLang') || 'en';
+            renderResults();
+        });
+         
+        function getTranslation(key) {
+             if (!key) return 'N/A';
+            const keyLower = key.toLowerCase().trim();
+            if (currentLanguage === 'kn' && KANNADA_TRANSLATIONS[keyLower]) {
+                return KANNADA_TRANSLATIONS[keyLower];
+            }
+            return key.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
+
+        function renderResults() {
+            updateUIText();
+            dynamicContentArea.innerHTML = '';
+            errorDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+
+            // **MODIFIED**: Added try...catch block for robust error handling
+            try {
+                const resultsDataString = sessionStorage.getItem('agriResults');
+                const audioData = sessionStorage.getItem('agriAudio');
+
+                if (!resultsDataString) {
+                    loadingDiv.classList.add('hidden');
+                    errorMessageP.textContent = uiStrings[currentLanguage].no_results;
+                    errorDiv.classList.remove('hidden');
+                    resultsContent.style.opacity = 1;
+                    return;
+                }
+
+                const results = JSON.parse(resultsDataString);
+
+                if (results.error) {
+                    loadingDiv.classList.add('hidden');
+                    errorMessageP.textContent = results.error;
+                    errorDiv.classList.remove('hidden');
+                    resultsContent.style.opacity = 1;
+                    return;
+                }
+
+                const { district, address, soil_data, weather_data, top_3_crops, predicted_prices, most_profitable_crop } = results;
+                const strings = uiStrings[currentLanguage];
+
+                let contentHTML = `
+                    <div class="card-dark p-6 rounded-2xl shadow-lg text-center animate-fade-in" style="animation-delay: 0s;">
+                        <p class="text-sm font-semibold text-green-300 uppercase tracking-wider">${strings.analysis_for}</p>
+                        <h1 class="text-3xl md:text-4xl font-bold text-white break-words">${address}</h1>
+                        <p class="text-xl text-emerald-200 font-semibold mt-1">${strings.district}: ${getTranslation(district)}</p>
+                    </div>
+                     
+                    <div class="card-dark p-6 rounded-2xl shadow-lg animate-fade-in" style="animation-delay: 0.2s;">
+                        <h2 class="text-2xl font-bold mb-4 text-white">${strings.conditions}</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                            <div class="bg-slate-800/60 p-4 rounded-lg"><i class="fas fa-sun text-yellow-400 text-2xl mb-2"></i><p class="text-slate-200">${strings.temp}</p><p class="font-bold text-lg text-white">${weather_data.Temperature.toFixed(1)} °C</p></div>
+                            <div class="bg-slate-800/60 p-4 rounded-lg"><i class="fas fa-tint text-blue-400 text-2xl mb-2"></i><p class="text-slate-200">${strings.humidity}</p><p class="font-bold text-lg text-white">${weather_data.Humidity}%</p></div>
+                            <div class="bg-slate-800/60 p-4 rounded-lg"><i class="fas fa-leaf text-green-400 text-2xl mb-2"></i><p class="text-slate-200">${strings.nitrogen}</p><p class="font-bold text-lg text-white">${soil_data.N}</p></div>
+                            <div class="bg-slate-800/60 p-4 rounded-lg"><i class="fas fa-flask text-purple-400 text-2xl mb-2"></i><p class="text-slate-200">${strings.phosphorus}</p><p class="font-bold text-lg text-white">${soil_data.P}</p></div>
+                            <div class="bg-slate-800/60 p-4 rounded-lg"><i class="fas fa-seedling text-orange-400 text-2xl mb-2"></i><p class="text-slate-200">${strings.potassium}</p><p class="font-bold text-lg text-white">${soil_data.K}</p></div>
+                            <div class="bg-slate-800/60 p-4 rounded-lg"><i class="fas fa-ruler-horizontal text-red-400 text-2xl mb-2"></i><p class="text-slate-200">${strings.ph}</p><p class="font-bold text-lg text-white">${soil_data.pH.toFixed(1)}</p></div>
+                            <div class="bg-slate-800/60 p-4 rounded-lg col-span-2"><i class="fas fa-cloud-showers-heavy text-cyan-400 text-2xl mb-2"></i><p class="text-slate-200">${strings.rainfall}</p><p class="font-bold text-lg text-white">${soil_data.Rainfall.toFixed(0)} mm</p></div>
+                        </div>
+                    </div>
+
+                    <div class="card-dark p-6 rounded-2xl shadow-lg animate-fade-in" style="animation-delay: 0.4s;">
+                        <h2 class="text-2xl font-bold mb-4 text-white">${strings.top_crops}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">`;
+                (top_3_crops || []).forEach(crop => {
+                    const isMostProfitable = crop.toLowerCase().trim() === most_profitable_crop.toLowerCase().trim();
+                    const price = predicted_prices[crop];
+                    const priceText = (price && price > 0) ? `₹${price.toFixed(2)}` : 'N/A';
+                    contentHTML += `
+                        <div class="border ${isMostProfitable ? 'border-green-400 ring-2 ring-green-300' : 'border-slate-700'} bg-slate-800/70 p-5 rounded-xl text-center transform hover:-translate-y-2 transition-transform duration-300 shadow-md relative overflow-hidden">
+                            ${isMostProfitable ? `<div class="absolute top-0 right-0 -mt-3 -mr-3 bg-green-400 text-white rounded-full h-10 w-10 flex items-center justify-center shadow-lg transform rotate-12"><i class="fas fa-star"></i></div>` : ''}
+                            <h3 class="text-2xl font-semibold text-white">${getTranslation(crop)}</h3>
+                            ${isMostProfitable ? `<p class="text-xs bg-green-200 text-green-800 font-bold py-1 px-3 rounded-full inline-block mt-2">${strings.most_profitable}</p>` : ''}
+                            <p class="text-emerald-200 mt-3">${strings.predicted_price}: <span class="font-bold text-white">${priceText}</span> <span class="text-sm">${strings.per_kg}</span></p>
+                        </div>
+                    `;
+                });
+                contentHTML += `</div></div>`;
+
+                if (audioData) {
+                    contentHTML += `
+                        <div class="card-dark p-6 rounded-2xl shadow-lg animate-fade-in" style="animation-delay: 0.6s;">
+                            <h2 class="text-2xl font-bold mb-3 text-white">${strings.audio_rec}</h2>
+                            <audio controls class="w-full" src="data:audio/wav;base64,${audioData}" autoplay>
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+                    `;
+                }
+
+                loadingDiv.classList.add('hidden');
+                dynamicContentArea.innerHTML = contentHTML;
+                resultsContent.style.opacity = 1;
+
+            } catch (error) {
+                // This block will run if any JS error occurs above (e.g., JSON.parse fails)
+                console.error("Error rendering results:", error);
+                loadingDiv.classList.add('hidden');
+                errorMessageP.textContent = uiStrings[currentLanguage].render_error;
+                errorDiv.classList.remove('hidden');
+                resultsContent.style.opacity = 1;
+            }
+        }
+
+        renderResults();
+    });
+</script>
+{% endblock %}

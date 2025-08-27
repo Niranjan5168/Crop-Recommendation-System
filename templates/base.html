@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Agri-AI Karnataka{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Slab:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1e293b; /* slate-800 */
+            color: #f1f5f9; /* slate-100 */
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Roboto Slab', serif;
+        }
+        #bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            overflow: hidden;
+        }
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-size: cover;
+            background-position: center;
+            opacity: 0; /* Start invisible */
+            transform: scale(1.05);
+            transition: opacity 1.5s ease-in-out, transform 8s ease-out;
+            will-change: opacity, transform;
+        }
+        .bg-image.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(120deg, rgba(30,41,59,0.85) 0%, rgba(51,65,85,0.7) 100%);
+            z-index: -1;
+        }
+        .card-dark {
+            background: rgba(30,41,59,0.92);
+            color: #f1f5f9;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0,0,0,0.12);
+            box-shadow: 0 4px 32px 0 rgba(0,0,0,0.13);
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
+    </style>
+</head>
+<body class="text-slate-100">
+    <div id="bg-container">
+        <div class="bg-image visible" style="background-image: url('https://images.unsplash.com/photo-1560493676-04071c5f467b?q=80&w=1974&auto=format&fit=crop');"></div>
+    </div>
+    <div class="overlay"></div>
+
+    <nav class="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-emerald-900/20 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="/" class="text-2xl font-bold text-emerald-200 tracking-wider flex items-center space-x-2 transition-transform hover:scale-105">
+                    <i class="fas fa-leaf text-green-400"></i>
+                    <span>Agri-AI</span>
+                </a>
+                <div class="flex items-center space-x-4 md:space-x-6 text-base">
+                    <a href="/" class="text-emerald-100 hover:text-white transition duration-300 font-medium {% if request.path == '/' %}text-green-300 border-b-2 border-green-400 pb-1{% endif %}">Home</a>
+                    <a href="/about" class="text-emerald-100 hover:text-white transition duration-300 font-medium {% if request.path == '/about' %}text-green-300 border-b-2 border-green-400 pb-1{% endif %}">About</a>
+                    <button id="langToggle" class="px-4 py-1.5 rounded-full text-sm font-bold bg-white/10 text-emerald-200 border border-emerald-200 hover:bg-white/20 backdrop-blur-sm transition-transform hover:-translate-y-0.5"></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="text-center p-6 text-emerald-200 text-sm bg-slate-900/80 mt-12">
+        <p>&copy; 2024 Agri-AI Karnataka. Empowering Farmers with Technology.</p>
+        <p class="text-xs text-emerald-400 mt-1">Data powered by OpenWeatherMap, Scikit-learn, TensorFlow & Hugging Face.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Language Toggle ---
+            const langToggle = document.getElementById('langToggle');
+            let currentLanguage = localStorage.getItem('agriLang') || 'en';
+            function updateToggleText() {
+                langToggle.textContent = currentLanguage === 'en' ? 'ಕನ್ನಡ' : 'English';
+            }
+            updateToggleText();
+            langToggle.addEventListener('click', () => {
+                currentLanguage = (currentLanguage === 'en') ? 'kn' : 'en';
+                localStorage.setItem('agriLang', currentLanguage);
+                updateToggleText();
+                window.dispatchEvent(new CustomEvent('languageChange'));
+            });
+
+            // --- Dynamic Background Slideshow ---
+            const bgContainer = document.getElementById('bg-container');
+            const images = [
+                'https://images.unsplash.com/photo-1560493676-04071c5f467b?q=80&w=1974&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1492496913980-db0ae525d353?q=80&w=1974&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1599557041284-7e2a15616fe3?q=80&w=1974&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=2070&auto=format&fit=crop'
+            ];
+            let currentImageIndex = 0;
+
+            function preloadImages() {
+                images.forEach(src => { new Image().src = src; });
+            }
+
+            function changeBackground() {
+                const allImageDivs = bgContainer.querySelectorAll('.bg-image');
+                currentImageIndex = (currentImageIndex + 1) % images.length;
+                
+                // Create the next image div
+                const newImageDiv = document.createElement('div');
+                newImageDiv.className = 'bg-image';
+                newImageDiv.style.backgroundImage = `url('${images[currentImageIndex]}')`;
+                bgContainer.appendChild(newImageDiv);
+
+                // Fade in the new image
+                setTimeout(() => {
+                    newImageDiv.classList.add('visible');
+                }, 50);
+
+                // Remove the oldest image after the new one has faded in
+                if (allImageDivs.length > 0) {
+                   setTimeout(() => {
+                        bgContainer.removeChild(allImageDivs[0]);
+                   }, 1500); // 1.5s matches the CSS transition time
+                }
+            }
+            
+            preloadImages();
+            setInterval(changeBackground, 7000); // Change image every 7 seconds
+        });
+    </script>
+</body>
+</html>

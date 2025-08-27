@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}Agri-AI Karnataka | Home{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 animate-fade-in">
+    <div class="card-dark p-8 md:p-12 rounded-2xl shadow-2xl w-full max-w-3xl">
+        <h1 id="ui-title" class="text-4xl md:text-5xl font-bold mb-4 text-green-300" style="text-shadow: 0 0 10px rgba(45, 212, 191, 0.5);">
+            Smart Crop Advisor
+        </h1>
+        <p id="ui-instruction" class="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
+            Get AI-powered insights for your farm. Enter a location or use your voice to discover the most suitable and profitable crops for your specific soil and weather conditions in Karnataka.
+        </p>
+
+        <div class="space-y-6">
+            <div>
+                <label for="manualInput" id="ui-manual-label" class="sr-only">Enter Your Location:</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </span>
+                    <input type="text" id="manualInput" class="w-full pl-12 pr-4 py-3 bg-slate-700/50 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-shadow shadow-sm placeholder-slate-400">
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="manualSubmit" class="w-full sm:w-1/2 px-6 py-3 rounded-lg font-bold shadow-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 bg-sky-600 text-white hover:bg-sky-700 focus:ring-sky-500/50 transform hover:scale-105 text-lg flex items-center justify-center space-x-3">
+                    <i class="fas fa-search"></i>
+                    <span id="ui-manual-submit">Get Recommendation</span>
+                </button>
+                <button id="voiceButton" class="w-full sm:w-1/2 px-6 py-3 rounded-lg font-bold shadow-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500/50 transform hover:scale-105 text-lg flex items-center justify-center space-x-3">
+                    <i id="voiceIcon" class="fas fa-microphone"></i>
+                    <span id="ui-voice-button">Use Voice (Kannada)</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="status-container" class="mt-6 text-center text-slate-300 min-h-[3rem] flex items-center justify-center">
+            <div id="loader" class="hidden items-center justify-center space-x-3">
+                <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-400"></div>
+                <p id="status" class="text-lg font-medium"></p>
+            </div>
+            <p id="error-message" class="text-red-400 bg-red-900/50 border border-red-500 p-3 rounded-lg font-semibold hidden"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Elements
+    const manualInput = document.getElementById('manualInput');
+    const manualSubmit = document.getElementById('manualSubmit');
+    const voiceButton = document.getElementById('voiceButton');
+    const statusDiv = document.getElementById('status');
+    const loader = document.getElementById('loader');
+    const errorMessage = document.getElementById('error-message');
+    const voiceIcon = document.getElementById('voiceIcon');
+
+    // UI Text Elements
+    const uiElements = {
+        title: document.getElementById('ui-title'),
+        instruction: document.getElementById('ui-instruction'),
+        manual_placeholder: manualInput,
+        manual_submit: document.getElementById('ui-manual-submit'),
+        voice_button_text: document.getElementById('ui-voice-button'),
+    };
+     
+    let currentLanguage = localStorage.getItem('agriLang') || 'en';
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    const uiStrings = {
+        en: {
+            title: "Smart Crop Advisor",
+            instruction: "Get AI-powered insights for your farm. Enter a location or use your voice to discover the most suitable and profitable crops for your specific soil and weather conditions in Karnataka.",
+            manual_placeholder: "e.g., Hassan, Karnataka",
+            manual_submit: "Get Recommendation",
+            voice_button: "Use Voice (Kannada)",
+            status_listening: "Listening...",
+            status_recording_stop: "Stop Recording",
+            status_transcribing: "Transcribing audio...",
+            status_analyzing: "Analyzing conditions...",
+            error_mic: "Could not access microphone. Please grant permission and try again.",
+            error_no_location: "Please enter a location.",
+            error_generic: "An unknown error occurred. Please try again."
+        },
+        kn: {
+            title: "ಸ್ಮಾರ್ಟ್ ಬೆಳೆ ಸಲಹೆಗಾರ",
+            instruction: "ನಿಮ್ಮ ಜಮೀನಿಗೆ ಕೃತಕ ಬುದ್ಧಿಮತ್ತೆ ಆಧಾರಿತ ಸಲಹೆಗಳನ್ನು ಪಡೆಯಿರಿ. ಕರ್ನಾಟಕದಲ್ಲಿ ನಿಮ್ಮ ನಿರ್ದಿಷ್ಟ ಮಣ್ಣು ಮತ್ತು ಹವಾಮಾನ ಪರಿಸ್ಥಿತಿಗಳಿಗೆ ಅತ್ಯಂತ ಸೂಕ್ತ ಮತ್ತು ಲಾಭದಾಯಕ ಬೆಳೆಗಳನ್ನು ಕಂಡುಹಿಡಿಯಲು ನಿಮ್ಮ ಸ್ಥಳವನ್ನು ನಮೂದಿಸಿ ಅಥವಾ ನಿಮ್ಮ ಧ್ವನಿಯನ್ನು ಬಳಸಿ.",
+            manual_placeholder: "ಉದಾ., ಹಾಸನ, ಕರ್ನಾಟಕ",
+            manual_submit: "ಶಿಫಾರಸು ಪಡೆಯಿರಿ",
+            voice_button: "ಧ್ವನಿ ಬಳಸಿ (ಕನ್ನಡ)",
+            status_listening: "ಕೇಳುತ್ತಿದೆ...",
+            status_recording_stop: "ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಿ",
+            status_transcribing: "ಆಡಿಯೋವನ್ನು ಪರಿವರ್ತಿಸಲಾಗುತ್ತಿದೆ...",
+            status_analyzing: "ಪರಿಸ್ಥಿತಿಗಳನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...",
+            error_mic: "ಮೈಕ್ರೊಫೋನ್ ಪ್ರವೇಶಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಅನುಮತಿ ನೀಡಿ ಮತ್ತು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+            error_no_location: "ದಯವಿಟ್ಟು ಸ್ಥಳವನ್ನು ನಮೂದಿಸಿ.",
+            error_generic: "ಒಂದು ಅಜ್ಞಾತ ದೋಷ ಸಂಭವಿಸಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+        }
+    };
+
+    function updateUIForLanguage() {
+        const strings = uiStrings[currentLanguage];
+        uiElements.title.textContent = strings.title;
+        uiElements.instruction.textContent = strings.instruction;
+        uiElements.manual_placeholder.placeholder = strings.manual_placeholder;
+        uiElements.manual_submit.textContent = strings.manual_submit;
+         
+        if (!isRecording) {
+            uiElements.voice_button_text.textContent = strings.voice_button;
+        } else {
+            uiElements.voice_button_text.textContent = strings.status_recording_stop;
+        }
+    }
+     
+    window.addEventListener('languageChange', () => {
+        currentLanguage = localStorage.getItem('agriLang') || 'en';
+        updateUIForLanguage();
+    });
+    updateUIForLanguage();
+
+    manualInput.addEventListener('keypress', (e) => e.key === 'Enter' && manualSubmit.click());
+    manualSubmit.addEventListener('click', () => {
+        const text = manualInput.value;
+        if (!text.trim()) {
+            setUIState(false, uiStrings[currentLanguage].error_no_location, true);
+            return;
+        }
+        getRecommendation(text);
+    });
+
+    voiceButton.addEventListener('click', () => {
+        if (isRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    });
+     
+    function setUIState(isLoading, message = '', isError = false) {
+        errorMessage.classList.add('hidden');
+        if (isLoading) {
+            loader.style.display = 'flex';
+            statusDiv.textContent = message;
+            manualSubmit.disabled = true;
+            manualInput.disabled = true;
+            voiceButton.disabled = true;
+            manualSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+            voiceButton.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            loader.style.display = 'none';
+            statusDiv.textContent = '';
+            manualSubmit.disabled = false;
+            voiceButton.disabled = false;
+            manualInput.disabled = false;
+            manualSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+            voiceButton.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500/50');
+            voiceIcon.className = "fas fa-microphone";
+            updateUIForLanguage();
+             
+            if (isError) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+            }
+        }
+    }
+
+    function startRecording() {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            isRecording = true;
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            audioChunks = [];
+            mediaRecorder.addEventListener("dataavailable", e => audioChunks.push(e.data));
+            mediaRecorder.addEventListener("stop", () => {
+                isRecording = false; 
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                voiceButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500/50');
+                handleRecordingStop(audioBlob);
+            });
+             
+            mediaRecorder.start();
+            setUIState(true, uiStrings[currentLanguage].status_listening);
+            voiceButton.disabled = false;
+            voiceButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            voiceButton.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500/50');
+            voiceIcon.className = "fas fa-stop-circle animate-pulse";
+            uiElements.voice_button_text.textContent = uiStrings[currentLanguage].status_recording_stop;
+
+        }).catch(err => {
+            isRecording = false;
+            console.error("Mic error:", err);
+            setUIState(false, uiStrings[currentLanguage].error_mic, true);
+        });
+    }
+     
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+        }
+    }
+
+    async function handleRecordingStop(audioBlob) {
+        setUIState(true, uiStrings[currentLanguage].status_transcribing);
+         
+        const formData = new FormData();
+        formData.append('audio_data', audioBlob, 'recording.webm');
+         
+        try {
+            const res = await fetch('/transcribe', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Server returned an invalid response.');
+            }
+            manualInput.value = data.transcribed_text; 
+            getRecommendation(data.transcribed_text);
+
+        } catch (err) {
+            setUIState(false, `Transcription failed: ${err.message}`, true);
+        }
+    }
+
+    async function getRecommendation(text) {
+        setUIState(true, uiStrings[currentLanguage].status_analyzing);
+         
+        try {
+            const res = await fetch('/get_recommendation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text, lang: currentLanguage })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                 throw new Error(data.error || uiStrings[currentLanguage].error_generic);
+            }
+             
+            sessionStorage.setItem('agriResults', JSON.stringify(data.detailed_results));
+            sessionStorage.setItem('agriAudio', data.audio_base64);
+             
+            window.location.href = '/results';
+        } catch (err) {
+            setUIState(false, `Analysis Error: ${err.message}`, true);
+        }
+    }
+});
+</script>
+{% endblock %}

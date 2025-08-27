@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voice-based Crop Recommendation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; margin: 2em 0; background-color: #f0f4f8; color: #333; }
+        .container { text-align: center; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); width: 90%; max-width: 600px; margin-bottom: 2em;}
+        h1 { color: #2c5e2d; margin-bottom: 10px; }
+        p { color: #666; margin-bottom: 30px; }
+        #mainButton { color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 50px; cursor: pointer; transition: background-color 0.3s, transform 0.2s; min-width: 200px;}
+        #status { margin-top: 20px; font-size: 16px; color: #555; height: 25px; font-weight: bold; }
+        #transcribedText { margin-top: 15px; font-size: 22px; color: #007bff; min-height: 30px;}
+        .button-record { background-color: #e74c3c; }
+        .button-record.is-recording { background-color: #c0392b; transform: scale(1.1); }
+        .button-confirm { background-color: #28a745; }
+        .button-disabled { background-color: #95a5a6; cursor: not-allowed; }
+        #audioPlayer { width: 100%; margin-top: 20px; }
+        #resultsContainer { text-align: left; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px; background-color: #fafafa;}
+        .hidden { display: none; }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5em; }
+        .card { background-color: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 1em; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>ಬೆಳೆ ಶಿಫಾರಸು ವ್ಯವಸ್ಥೆ</h1>
+    <p>ನಿಮ್ಮ ಸ್ಥಳವನ್ನು ಹೇಳಲು ದಯವಿಟ್ಟು ಕೆಳಗಿನ ಬಟನ್ ಒತ್ತಿ ಮಾತನಾಡಿ</p>
+    <div id="transcribedText"></div>
+    <div id="status">Press the button below to start.</div>
+    <button id="mainButton" class="button-record">ಮಾತನಾಡಿ (Speak)</button>
+    <audio id="audioPlayer" controls class="hidden"></audio>
+</div>
+
+<div id="resultsContainer" class="container hidden">
+    </div>
+
+<script>
+    const mainButton = document.getElementById('mainButton');
+    const statusDiv = document.getElementById('status');
+    const transcribedTextDiv = document.getElementById('transcribedText');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const resultsContainer = document.getElementById('resultsContainer');
+    
+    let appState = 'idle';
+
+    function setState(newState, statusText, buttonText, buttonClass, transcribedText = '') {
+        appState = newState;
+        statusDiv.textContent = statusText;
+        mainButton.textContent = buttonText;
+        mainButton.className = "button " + buttonClass;
+        transcribedTextDiv.textContent = transcribedText;
+        mainButton.disabled = (newState === 'transcribing' || newState === 'processing');
+        if (newState === 'idle') {
+            audioPlayer.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+        }
+    }
+
+    mainButton.addEventListener('click', () => {
+        switch (appState) {
+            case 'idle':
+            case 'finished':
+                startRecording();
+                break;
+            case 'recording':
+                stopRecording();
+                break;
+            case 'confirming':
+                getRecommendation();
+                break;
+        }
+    });
+
+    function startRecording() {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            let mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.start();
+            let audioChunks = [];
+            mediaRecorder.addEventListener("dataavailable", event => audioChunks.push(event.data));
+            mediaRecorder.addEventListener("stop", () => handleRecordingStop(audioChunks));
+            window.currentRecorder = mediaRecorder;
+            setState('recording', 'Now recording... Click again to stop.', 'ಕೇಳುತ್ತಿದೆ... (Listening)', 'button-record is-recording');
+        }).catch(err => alert('Could not access microphone.'));
+    }
+
+    function stopRecording() {
+        if (window.currentRecorder) {
+            window.currentRecorder.stop();
+            setState('transcribing', 'Transcribing your speech...', 'Processing...', 'button-disabled');
+        }
+    }
+
+    function handleRecordingStop(audioChunks) {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const formData = new FormData();
+        formData.append('audio_data', audioBlob);
+
+        fetch('/transcribe', { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) throw new Error(data.error);
+                setState('confirming', 'Is this correct? Click to confirm.', 'ದೃಢೀಕರಿಸಿ (Confirm)', 'button-confirm', `"${data.transcribed_text}"`);
+            })
+            .catch(err => setState('idle', `Error: ${err.message}. Please try again.`, 'ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ (Retry)', 'button-record'));
+    }
+
+    function getRecommendation() {
+        const textToSend = transcribedTextDiv.textContent.replace(/"/g, '');
+        setState('processing', 'Getting recommendation, please wait...', 'Processing...', 'button-disabled');
+
+        fetch('/get_recommendation', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ text: textToSend })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error) throw new Error(data.error);
+            
+            // Display visual results and play audio
+            displayResults(data.detailed_results);
+            playAudioFromBase64(data.audio_base64);
+
+            setState('finished', 'Here is your complete recommendation.', 'ಮತ್ತೆ ಮಾತನಾಡಿ (Speak Again)', 'button-record');
+        })
+        .catch(err => setState('idle', `Error: ${err.message}. Please try again.`, 'ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ (Retry)', 'button-record'));
+    }
+
+    function playAudioFromBase64(base64String) {
+        const audioData = atob(base64String);
+        const arrayBuffer = new ArrayBuffer(audioData.length);
+        const uint8Array = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < audioData.length; i++) {
+            uint8Array[i] = audioData.charCodeAt(i);
+        }
+        const blob = new Blob([uint8Array], { type: 'audio/wav' });
+        const url = URL.createObjectURL(blob);
+        audioPlayer.src = url;
+        audioPlayer.classList.remove('hidden');
+        audioPlayer.play();
+    }
+
+    function displayResults(results) {
+        resultsContainer.innerHTML = ''; // Clear previous results
+        
+        const { district, address, top_3_crops, profit_analysis, most_profitable_crop } = results;
+
+        let content = `<h2>Analysis for ${address}</h2>`;
+        content += `<p><strong>District:</strong> ${district}</p>`;
+        
+        content += `<h3>Top 3 Suitable Crops & Profitability Analysis</h3>`;
+        content += `<div class="results-grid">`;
+        
+        top_3_crops.forEach(crop => {
+            const profit = profit_analysis[crop];
+            content += `<div class="card ${crop === most_profitable_crop ? 'highlight' : ''}">`;
+            content += `<h4>${crop}</h4>`;
+            if (profit && profit.status === 'success') {
+                content += `<p>Est. Revenue: ₹${profit.total_revenue.toLocaleString('en-IN')}/acre</p>`;
+            } else {
+                content += `<p>Could not analyze profitability.</p>`;
+            }
+            content += `</div>`;
+        });
+        
+        content += `</div>`;
+        content += `<h3 style="margin-top: 2em;">Most Profitable Crop: <strong>${most_profitable_crop}</strong></h3>`;
+        
+        resultsContainer.innerHTML = content;
+        resultsContainer.classList.remove('hidden');
+    }
+
+    setState('idle', 'Press the button below to start.', 'ಮಾತನಾಡಿ (Speak)', 'button-record');
+</script>
+
+</body>
+</html>
