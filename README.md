@@ -4,7 +4,6 @@
 
 Agri-Voice Assist is an intelligent web application designed to provide hyper-local, profitable crop recommendations to farmers in Karnataka, India. Using a voice-first interface that supports both **Kannada and English**, the application analyzes local soil, weather, and historical market data to not only suggest suitable crops but also forecast their future profitability.
 
-![Agri-Voice Assist UI](https://placehold.co/800x400/2d3748/ffffff?text=Agri-Voice+Assist+Interface)
 
 ---
 
@@ -132,7 +131,7 @@ Ensure the following CSV files are in the root directory of the project:
 ### 7. Run the Application
 
 ```bash
-flask run --port 5001
+app.py
 ```
 
 The application will be available at `http://127.0.0.1:5001`.
